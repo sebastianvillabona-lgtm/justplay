@@ -1,0 +1,63 @@
+import numpy as np
+
+# =====================================================================
+# 🛠️ 1. ZONA DE CAMBIO DE DATOS (Esto es lo ÚNICO que vas a modificar)
+# =====================================================================
+
+# A) DATOS DE LA LIGA (Dejamos los de Brasil por defecto, pero puedes cambiarlos)
+promedio_goles_local_liga = 1.40
+promedio_goles_visita_liga = 1.04
+
+# B) ESTADÍSTICAS EN VIVO DE LOS EQUIPOS
+goles_anotados_local_en_casa = 1.47       # Goles que anota Bahía
+goles_concedidos_local_en_casa = 1.35     # Goles que recibe Bahía
+
+goles_anotados_visita_fuera = 1.00        # Goles que anota Chapecoense
+goles_concedidos_visita_fuera = 1.94      # Goles que recibe Chapecoense
+
+# C) LA APUESTA QUE ESTÁS EVALUANDO EN BETPLAY
+handicap_aplicado = 1.5                   # El hándicap (ej: poner 1.5 si es +1.5)
+cuota_betplay = 1.61                      # La cuota que paga BetPlay hoy
+
+
+# =====================================================================
+# ⚙️ 2. EL MOTOR (No necesitas tocar nada de aquí para abajo)
+# =====================================================================
+fuerza_ataque_local = goles_anotados_local_en_casa / promedio_goles_local_liga
+fuerza_defensa_visitante = goles_concedidos_visita_fuera / promedio_goles_local_liga
+goles_esperados_local = fuerza_ataque_local * fuerza_defensa_visitante * promedio_goles_local_liga
+
+fuerza_ataque_visitante = goles_anotados_visita_fuera / promedio_goles_visita_liga
+fuerza_defensa_local = goles_concedidos_local_en_casa / promedio_goles_visita_liga
+goles_esperados_visitante = fuerza_ataque_visitante * fuerza_defensa_local * promedio_goles_visita_liga
+
+# Simulando con Montecarlo y Poisson
+simulaciones = 10000
+goles_simulados_local = np.random.poisson(goles_esperados_local, simulaciones)
+goles_simulados_visitante = np.random.poisson(goles_esperados_visitante, simulaciones)
+
+apuestas_ganadas = 0
+for i in range(simulaciones):
+    marcador_virtual_visitante = goles_simulados_visitante[i] + handicap_aplicado
+    if marcador_virtual_visitante > goles_simulados_local[i]:
+        apuestas_ganadas += 1
+
+probabilidad_exito_handicap = (apuestas_ganadas / simulaciones) * 100
+valor = probabilidad_exito_handicap * cuota_betplay
+
+# Impresión de resultados limpios en pantalla
+print("=" * 50)
+print("       📊 RESULTADOS DE LA SIMULACIÓN 📊")
+print("=" * 50)
+print(f"⚽ Goles Proyectados Local:     {goles_esperados_local:.2f}")
+print(f"⚽ Goles Proyectados Visitante: {goles_esperados_visitante:.2f}")
+print("-" * 50)
+print(f"🎲 Probabilidad de acertar el Hándicap: {probabilidad_exito_handicap:.2f}%")
+print(f"💰 Índice de Valor Calculado:           {valor:.2f}")
+print("-" * 50)
+
+if valor > 100:
+    print(f"🚀 ¡HAY VALOR MATEMÁTICO! La cuota {cuota_betplay} vale la pena.")
+else:
+    print(f"❌ NO HAY VALOR. BetPlay se quedó corto con la cuota de {cuota_betplay}.")
+print("=" * 50)
